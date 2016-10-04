@@ -1,6 +1,6 @@
 # TODO:
 # - Variables
-# - Repeat
+# - Labels/Jumps/Loops
 
 import sys
 
@@ -42,6 +42,10 @@ aliases = {
     "BACK": "BACKSPACE"
 }
 
+# Previous data length
+preLen = 0
+noReplay = True
+
 # Read lines
 for line in inf:
     # Remove newlines
@@ -64,10 +68,16 @@ for line in inf:
     if cmd in aliases:
         cmd = aliases[cmd]
 
+    # Resets
+    if cmd != "REPLAY":
+        noReplay = False
+        preLen = len(keys)
+
     # Commands
     if cmd == "DELAY":
         keys.append(251)
         numbers.append(int(arg))
+        noReplay = True
 
     elif cmd == "REM":
         print(">>> " + arg)
@@ -80,6 +90,14 @@ for line in inf:
                 keys.append(ord(c))
 
             arg = arg[250:]
+
+    elif cmd == "REPLAY":
+        if noReplay: 
+            print("]]] ERROR: That command cannot be replayed!");
+
+        sub = keys[preLen:]
+        for i in range(int(arg)):
+            keys.extend(sub)
 
     elif cmd in mods:
         keys.append(0)

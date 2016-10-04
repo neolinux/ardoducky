@@ -1,6 +1,3 @@
-# https://github.com/coopermaa/USBKeyboard/blob/master/hid_keys.h
-# http://www.freebsddiary.org/APC/usb_hid_usages.php
-
 # TODO:
 # - Variables
 # - Repeat
@@ -51,7 +48,7 @@ for line in inf:
     line = line.replace("\n", "").replace("\r", "")
 
     # Line too short?
-    if len(line) < 3:
+    if len(line) < 1:
         continue
 
     # Split
@@ -89,16 +86,11 @@ for line in inf:
         keys.append(mods.index(cmd))
         keys.append(ord(arg[0]) if len(arg) > 0 else 0)
 
-    # Lastly check if this is a key
-    #elif len(cmd) == 1 and ord(cmd[0]) > 0:
-    #    keys.append(1)
-    #    keys.append(ord(cmd))
-
     else:
         print("]]] WARNING: Unhandled command '" + cmd + "'")
 
 
-# Close file
+# Close input file
 inf.close()
 
 # Create header file

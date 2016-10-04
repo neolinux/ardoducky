@@ -39,7 +39,12 @@ aliases = {
     "CTRL": "CONTROL",
     "WINDOWS": "GUI",
     "ENTER": "RETURN",
-    "BACK": "BACKSPACE"
+    "BACK": "BACKSPACE",
+    "LEFTARROW": "LEFT",
+    "DOWNARROW": "DOWN",
+    "UPARROW": "UP",
+    "RIGHTARROW": "RIGHT",
+    "REPEAT": "REPLAY"
 }
 
 # Previous data length

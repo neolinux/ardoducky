@@ -7,29 +7,6 @@
 
 import sys
 
-# Defines
-MOD_CTRL = 1
-MOD_SHIFT = 2
-MOD_ALT = 4
-MOD_GUI = 8
-
-KEY_A = 4
-KEY_ENTER = 40
-
-# Functions
-def keyValue(k):
-    k = k.upper()
-
-    if len(k) == 1 and k >= 'A' and k <= 'Z':
-        return ord(k) - ord('A') + KEY_A
-
-    elif k == "ENTER":
-        return KEY_ENTER
-
-    else:
-        print("]]] INFO: Unhandled key '" + k + "'")
-        return 0
-
 # Check args
 if len(sys.argv) != 2:
     print("Usage: duckencoder.py <script>")
@@ -37,16 +14,36 @@ if len(sys.argv) != 2:
 
 # Open duckyscript
 inf = open(sys.argv[1], "r")
-keys = [] # Alternating ctrl-key and character-key, 
-
-#               CTRL KEY EXCEPTIONS
-#           255 - delay
-#           254 - release
-#           253 - input alt code
-#           252 - press normal key then release
-#           251 - press key with shift then release
+keys = [] # Key data
+                # 0 -> Modifier key input
+                # 1 - 250 -> String input
+                # 251 -> Number delay
 
 numbers = [] # Used to store ints
+
+# Modifiers
+mods = [
+    "CONTROL",
+    "SHIFT",
+    "ALT",
+    "GUI",
+    "LEFT",
+    "DOWN",
+    "UP",
+    "RIGHT",
+    "BACKSPACE",
+    "RETURN",
+    "ESCAPE",
+    "DELETE",
+    "TAB"
+]
+
+aliases = {
+    "CTRL": "CONTROL",
+    "WINDOWS": "GUI",
+    "ENTER": "RETURN",
+    "BACK": "BACKSPACE"
+}
 
 # Read lines
 for line in inf:
@@ -66,61 +63,40 @@ for line in inf:
         cmd = line[:f]
         arg = line[f + 1:]
 
+    # Aliases
+    if cmd in aliases:
+        cmd = aliases[cmd]
+
     # Commands
     if cmd == "DELAY":
-        keys.append(255)
+        keys.append(251)
         numbers.append(int(arg))
 
     elif cmd == "REM":
         print(">>> " + arg)
 
     elif cmd == "STRING":
-        for c in arg:
-            # Letter key
-            if c >= 'a' and c <= 'z':
-                keys.append(252)
-                keys.append(ord(c) - ord('a') + KEY_A)
-            
-            # Shifted letter key   
-            elif c >= 'A' and c <= 'Z':
-                keys.append(251)
-                keys.append(ord(c) - ord('A') + KEY_A)
-            
-            # Anything else
-            else:
-                # Enter altcode
-                keys.append(253)
+        while len(arg) > 0:
+            sub = arg[:250]
+            keys.append(len(sub))
+            for c in sub:
                 keys.append(ord(c))
 
-    elif cmd == "GUI" or cmd == "WINDOWS":
-        keys.append(MOD_GUI)
-        keys.append(keyValue(arg[0]) if len(arg) > 0 else 0)
-        keys.append(254) # Release keys
+            arg = arg[250:]
 
-    elif cmd == "CTRL" or cmd == "CONTROL":
-        keys.append(MOD_CTRL)
-        keys.append(keyValue(arg[0]) if len(arg) > 0 else 0)
-        keys.append(254) # Release keys
-
-    elif cmd == "SHIFT":
-        keys.append(MOD_SHIFT)
-        keys.append(keyValue(arg[0]) if len(arg) > 0 else 0)
-        keys.append(254) # Release keys
-
-    elif cmd == "ALT":
-        keys.append(MOD_ALT)
-        keys.append(keyValue(arg[0]) if len(arg) > 0 else 0)
-        keys.append(254) # Release keys
+    elif cmd in mods:
+        keys.append(0)
+        keys.append(mods.index(cmd))
+        keys.append(ord(arg[0]) if len(arg) > 0 else 0)
 
     # Lastly check if this is a key
-    elif keyValue(cmd) > 0:
-        keys.append(0)
-        keys.append(keyValue(cmd))
-        keys.append(254) # Release keys
+    #elif len(cmd) == 1 and ord(cmd[0]) > 0:
+    #    keys.append(1)
+    #    keys.append(ord(cmd))
 
     else:
         print("]]] WARNING: Unhandled command '" + cmd + "'")
-    
+
 
 # Close file
 inf.close()

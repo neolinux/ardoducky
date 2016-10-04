@@ -1,5 +1,40 @@
 #include <Keyboard.h>
 #include "duckencoder/script.h"
+void runCode();
+bool RUN_ON_START = true;
+//
+
+bool pInput = false;
+
+void setup() {
+  // Custom code:
+  pinMode(3, INPUT);
+  pinMode(5, OUTPUT);
+  digitalWrite(5, HIGH);
+  pInput = digitalRead(3);
+
+  // Init
+  Keyboard.begin();
+  delay(1000);
+  if (RUN_ON_START) runCode();
+}
+
+void loop() {
+  // Check if our button is pressed
+  if (!RUN_ON_START && digitalRead(3)) {
+    if (!pInput) {
+      pInput = true;
+      runCode();
+    }
+  } else {
+    pInput = false;
+  }
+
+  delay(50);
+}
+
+
+//// MAIN CODE ////
 
 int mods[] = {
   KEY_LEFT_CTRL,    // 0
@@ -19,11 +54,36 @@ int mods[] = {
 
 int numpad_1 = 225;
 
-void setup() {
-  Keyboard.begin();
+void altCode(char n) {
+  // Get digits
+  char a = n / 100;
+  char b = (n / 10) % 10;
+  char c = n % 10;
 
-  delay(1000);
+  // Press alt
+  Keyboard.press(KEY_LEFT_ALT);
+  delay(1);
 
+  // Type alt code
+  if (a) {
+    Keyboard.write(numpad_1 + (a + 9) % 10);
+    delay(1);
+  }
+
+  if (a || b) {
+    Keyboard.write(numpad_1 + (b + 9) % 10);
+    delay(1);
+  }
+
+  Keyboard.write(numpad_1 + (c + 9) % 10);
+  delay(1);
+
+  // Release alt
+  Keyboard.release(KEY_LEFT_ALT);
+  delay(1);
+}
+
+void runCode() {
   int num = 0;
 
   for (int i = 0; i < script_len; i++) {
@@ -33,34 +93,14 @@ void setup() {
     if (cmd >= 1 && cmd <= 250) {
       int j;
       for (j = i + 1; j <= i + cmd; j++) {
-        unsigned char n = (char)pgm_read_byte(&script_src[j]);
+        char chr = (char)pgm_read_byte(&script_src[j]);
 
-        // Press alt-code instead of actual key
-        unsigned char a = n / 100;
-        unsigned char b = (n / 10) % 10;
-        unsigned char c = n % 10;
-
-        // Press alt
-        Keyboard.press(KEY_LEFT_ALT);
-        delay(1);
-
-        // Type alt code
-        if (a) {
-          Keyboard.write(numpad_1 + (a + 9) % 10);
-          delay(1);
+        // If it's a normal letter or number
+        if ((chr >= 65 && chr <= 90) || (chr >= 97 && chr <= 122) || (chr >= 48 && chr <= 57)) {
+          Keyboard.write(chr);
+        } else {
+          altCode(chr);
         }
-
-        if (a || b) {
-          Keyboard.write(numpad_1 + (b + 9) % 10);
-          delay(1);
-        }
-
-        Keyboard.write(numpad_1 + (c + 9) % 10);
-        delay(1);
-
-        // Release alt
-        Keyboard.release(KEY_LEFT_ALT);
-        delay(1);
       }
       i = j - 1;
 
@@ -85,9 +125,3 @@ void setup() {
     }
   }
 }
-
-void loop() {
-  // Don't do anything :>
-  delay(1000);
-}
-

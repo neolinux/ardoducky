@@ -17,6 +17,8 @@ int mods[] = {
   KEY_TAB
 };
 
+int numpad_1 = 225;
+
 void setup() {
   Keyboard.begin();
 
@@ -31,8 +33,33 @@ void setup() {
     if (cmd >= 1 && cmd <= 250) {
       int j;
       for (j = i + 1; j <= i + cmd; j++) {
-        char chr = (char)pgm_read_byte(&script_src[j]);
-        Keyboard.write(chr);
+        unsigned char n = (char)pgm_read_byte(&script_src[j]);
+
+        // Press alt-code instead of actual key
+        unsigned char a = n / 100;
+        unsigned char b = (n / 10) % 10;
+        unsigned char c = n % 10;
+
+        // Press alt
+        Keyboard.press(KEY_LEFT_ALT);
+        delay(1);
+
+        // Type alt code
+        if (a) {
+          Keyboard.write(numpad_1 + (a + 9) % 10);
+          delay(1);
+        }
+
+        if (a || b) {
+          Keyboard.write(numpad_1 + (b + 9) % 10);
+          delay(1);
+        }
+
+        Keyboard.write(numpad_1 + (c + 9) % 10);
+        delay(1);
+
+        // Release alt
+        Keyboard.release(KEY_LEFT_ALT);
         delay(1);
       }
       i = j - 1;

@@ -16,6 +16,19 @@ void setup() {
   // Init
   Keyboard.begin();
   delay(1000);
+
+  // Make sure numlock is on and caps lock is off
+  // Requires patched Keyboard and HID library
+  uint8_t leds = Keyboard.getLedStatus();
+  if (!(leds & LED_NUM_LOCK)) {
+    Keyboard.write(KEY_NUM_LOCK);
+  }
+
+  if (leds & LED_CAPS_LOCK) {
+    Keyboard.write(KEY_CAPS_LOCK);
+  }
+
+  // Run
   if (RUN_ON_START) runCode();
 }
 

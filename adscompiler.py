@@ -1,6 +1,15 @@
 import sys
 
-# Functions
+# Script vars
+ads_data = []
+ads_consts = []
+ads_vars = []
+
+# Compiler vars
+labels = {}
+jumps = {}
+
+# Keycodes
 keyCodes = {
     "enter":    10,
     "space":    32,
@@ -42,6 +51,7 @@ keyCodes = {
     "f12":      0xcd
 }
 
+# Functions
 def keyCode(key):
     if key in keyCodes:
         return keyCodes[key]
@@ -55,6 +65,18 @@ def keyCode(key):
         print("]]] WARNING: Unknown key '" + key + "'")
         return 0
 
+def pushConst(num):
+    # Push number into constants if it doesn't exist already
+    if not num in ads_consts:
+        ads_consts.append(num)
+
+    idx = ads_consts.index(num)
+    if idx > 255:
+        print("ERROR: Too many constants!")
+        exit()
+
+    return idx
+
 # Check args
 if len(sys.argv) != 2:
     print("Usage: adscompiler.py <script>")
@@ -62,11 +84,6 @@ if len(sys.argv) != 2:
 
 # Open ardoducky script
 inf = open(sys.argv[1], "r")
-
-# Script vars
-ads_data = []
-ads_consts = []
-ads_vars = []
 
 # Read lines
 for line in inf:
@@ -99,18 +116,9 @@ for line in inf:
 
     # Wait
     elif cmd == "wait":
-        # Push number into constants if it doesn't exist already
-        num = int(arg)
-        if not num in ads_consts:
-            ads_consts.append(num)
-
-        idx = ads_consts.index(num)
-        if idx > 255:
-            printf("]]] ERROR: Too many constants!")
-
         # Push command
         ads_data.append(2) # OP
-        ads_data.append(idx) # Const index
+        ads_data.append(pushConst(int(arg))) # Const index
 
     # Press key
     elif cmd == "press":
@@ -123,12 +131,36 @@ for line in inf:
             ads_data.append(4) # Release key OP
             ads_data.append(keyCode(key)) # Keycode
 
+    # Label
+    elif cmd[0] == ':':
+        lbl = cmd[1:]
+        if lbl in labels:
+            print("ERROR: Label '" + lbl + "' already exists!")
+            exit()
+
+        labels[lbl] = len(ads_data)
+
+    # Goto label
+    elif cmd == "goto":
+        # Don't put in the real jump. We're not sure the label exist yet.
+        ads_data.append(5) # Jump OP
+        jumps[len(ads_data)] = arg
+        ads_data.append(0) # Dummy jump
+
     # Unknown
     else:
         print("]]] WARNING: Unhandled command '" + cmd + "'")
 
 # Close input file
 inf.close()
+
+# Handle jumps
+for i in jumps:
+    if not jumps[i] in labels:
+        print("ERROR: Label '" + jumps[i] + "' doesn't exist!")
+        exit()
+
+    ads_data[i] = pushConst(labels[jumps[i]])
 
 # Turn data into strings
 for i in range(len(ads_data)):

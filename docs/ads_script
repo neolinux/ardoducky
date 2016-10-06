@@ -6,3 +6,10 @@ wait <time>:
 
 press <key>[+key...]:
     Presses and releases a keycombination
+
+:<label>:
+    Defines a label
+
+jump <label>:
+    Jumps to a label
+

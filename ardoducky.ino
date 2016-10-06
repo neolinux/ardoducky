@@ -7,12 +7,6 @@ void setup() {
   Keyboard.begin();
   delay(500);
 
-  // Make sure numlock is on and caps lock is off
-  // Requires patched Keyboard and HID library
-  uint8_t leds = Keyboard.getLedStatus();
-  if (!(leds & LED_NUM_LOCK)) Keyboard.write(KEY_NUM_LOCK);
-  if (leds & LED_CAPS_LOCK) Keyboard.write(KEY_CAPS_LOCK);
-
   // Run
   runCode();
 }
@@ -95,6 +89,12 @@ void runCode() {
       char key = (char)pgm_read_byte(&ads_data[++i]);
       Keyboard.release(key);
       delay(1);
+    }
+
+    // Jump
+    else if (cmd == (char)5) {
+      char idx = (char)pgm_read_byte(&ads_data[++i]);
+      i = ads_consts[idx] - 1;
     }
   }
 }

@@ -12,3 +12,6 @@ Release key:
 
 Jump:
 5, const
+
+Write string raw:
+6, len, [bytes]

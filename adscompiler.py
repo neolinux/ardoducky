@@ -147,6 +147,17 @@ for line in inf:
         jumps[len(ads_data)] = arg
         ads_data.append(0) # Dummy jump
 
+    # Write string raw
+    elif cmd == "writeraw":
+        while len(arg) > 0:
+            sub = arg[:255]
+            ads_data.append(6) # OP
+            ads_data.append(len(sub)) # Len
+            for c in sub:
+                ads_data.append(ord(c)) # Char
+
+            arg = arg[255:]
+
     # Unknown
     else:
         print("]]] WARNING: Unhandled command '" + cmd + "'")

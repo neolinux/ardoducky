@@ -96,5 +96,17 @@ void runCode() {
       uint8_t idx = pgm_read_byte(&ads_data[++i]);
       i = ads_consts[idx] - 1;
     }
+
+    // Write string raw
+    else if (cmd == 6) {
+      uint8_t len = pgm_read_byte(&ads_data[i + 1]);
+      int j;
+      for (j = i + 2; j <= i + len + 1; j++) {
+        uint8_t chr = pgm_read_byte(&ads_data[j]);
+        Keyboard.write(chr);
+        delay(1);
+      }
+      i = j - 1;
+    }
   }
 }

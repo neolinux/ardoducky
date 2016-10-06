@@ -5,7 +5,7 @@ void runCode();
 void setup() {
   // Init
   Keyboard.begin();
-  delay(500);
+  delay(1000);
 
   // Run
   runCode();
@@ -19,11 +19,11 @@ void loop() {
 //// MAIN CODE ////
 int numpad_1 = 225;
 
-void altCode(char n) {
+void altCode(uint8_t n) {
   // Get digits
-  char a = n / 100;
-  char b = (n / 10) % 10;
-  char c = n % 10;
+  uint8_t a = n / 100;
+  uint8_t b = (n / 10) % 10;
+  uint8_t c = n % 10;
 
   // Press alt
   Keyboard.press(KEY_LEFT_ALT);
@@ -51,14 +51,14 @@ void altCode(char n) {
 void runCode() {
   // Iterate script
   for (int i = 0; i < ads_len; i++) {
-    char cmd = (char)pgm_read_byte(&ads_data[i]);
+    uint8_t cmd = pgm_read_byte(&ads_data[i]);
 
     // Write string
-    if (cmd == (char)1) {
-      char len = (char)pgm_read_byte(&ads_data[i + 1]);
+    if (cmd == 1) {
+      uint8_t len = pgm_read_byte(&ads_data[i + 1]);
       int j;
       for (j = i + 2; j <= i + len + 1; j++) {
-        char chr = (char)pgm_read_byte(&ads_data[j]);
+        uint8_t chr = pgm_read_byte(&ads_data[j]);
 
         // If it's a normal letter or number
         if ((chr >= 65 && chr <= 90) || (chr >= 97 && chr <= 122) || (chr >= 48 && chr <= 57))
@@ -72,28 +72,28 @@ void runCode() {
     }
 
     // Wait
-    else if (cmd == (char)2) {
-      char idx = (char)pgm_read_byte(&ads_data[++i]);
+    else if (cmd == 2) {
+      uint8_t idx = pgm_read_byte(&ads_data[++i]);
       delay(ads_consts[idx]);
     }
 
     // Press
-    else if (cmd == (char)3) {
-      char key = (char)pgm_read_byte(&ads_data[++i]);
+    else if (cmd == 3) {
+      uint8_t key = pgm_read_byte(&ads_data[++i]);
       Keyboard.press(key);
       delay(1);
     }
 
     // Release
-    else if (cmd == (char)4) {
-      char key = (char)pgm_read_byte(&ads_data[++i]);
+    else if (cmd == 4) {
+      uint8_t key = pgm_read_byte(&ads_data[++i]);
       Keyboard.release(key);
       delay(1);
     }
 
     // Jump
-    else if (cmd == (char)5) {
-      char idx = (char)pgm_read_byte(&ads_data[++i]);
+    else if (cmd == 5) {
+      uint8_t idx = pgm_read_byte(&ads_data[++i]);
       i = ads_consts[idx] - 1;
     }
   }

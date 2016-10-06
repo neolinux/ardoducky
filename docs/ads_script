@@ -12,8 +12,3 @@ press <key>[+key...]:
 
 jump <label>:
     Jumps to a label
-
-writeraw <str>:
-    Writes ASCII string without using ALT-key. Useful for systems other than
-    Windows but causes incompatibility with keyboard layouts and behaviour
-    is unknown for many characters.

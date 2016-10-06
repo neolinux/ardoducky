@@ -11,58 +11,62 @@ jumps = {}
 
 # Keycodes
 keyCodes = {
-    "enter":    10,
-    "space":    32,
+    " ":        "KEY_SPACE",
 
-    "ctrl":     0x80,
-    "shift":    0x81,
-    "alt":      0x82,
-    "gui":      0x83,
+    "enter":    "KEY_ENTER",
+    "space":    "KEY_SPACE",
 
-    "right":    0xd7,
-    "left":     0xd8,
-    "down":     0xd9,
-    "up":       0xda,
+    "ctrl":     "KEY_LEFT_CTRL",
+    "shift":    "KEY_LEFT_SHIFT",
+    "alt":      "KEY_LEFT_ALT",
+    "gui":      "KEY_LEFT_GUI",
 
-    "esc":      0xb1,
-    "back":     0xb2,
-    "tab":      0xb3,
+    "right":    "KEY_RIGHT_ARROW",
+    "left":     "KEY_LEFT_ARROW",
+    "down":     "KEY_DOWN_ARROW",
+    "up":       "KEY_UP_ARROW",
+
+    "esc":      "KEY_ESC",
+    "back":     "KEY_BACKSPACE",
+    "tab":      "KEY_TAB",
     
-    "ins":      0xd1,
-    "home":     0xd2,
-    "pgup":     0xd3,
-    "del":      0xd4,
-    "end":      0xd5,
-    "pgdn":     0xd6,
+    "ins":      "KEY_INSERT",
+    "home":     "KEY_HOME",
+    "pgup":     "KEY_PAGE_UP",
+    "del":      "KEY_DELETE",
+    "end":      "KEY_END",
+    "pgdn":     "KEY_PAGE_DOWN",
 
-    "caps":     0xc1,
+    "caps":     "KEY_CAPS_LOCK",
     
-    "f1":       0xc2,
-    "f2":       0xc3,
-    "f3":       0xc4,
-    "f4":       0xc5,
-    "f5":       0xc6,
-    "f6":       0xc7,
-    "f7":       0xc8,
-    "f8":       0xc9,
-    "f9":       0xca,
-    "f10":      0xcb,
-    "f11":      0xcc,
-    "f12":      0xcd
+    "f1":       "KEY_F1",
+    "f2":       "KEY_F2",
+    "f3":       "KEY_F3",
+    "f4":       "KEY_F4",
+    "f5":       "KEY_F5",
+    "f6":       "KEY_F6",
+    "f7":       "KEY_F7",
+    "f8":       "KEY_F8",
+    "f9":       "KEY_F9",
+    "f10":      "KEY_F10",
+    "f11":      "KEY_F11",
+    "f12":      "KEY_F12"
 }
 
 # Functions
-def keyCode(key):
+def keyCode(key, warn = False):
     if key in keyCodes:
         return keyCodes[key]
 
     elif (key >= 'A' and key <= 'Z') or\
         (key >= 'a' and key <= 'z') or\
-        (key >= '0' and key <= '0'):
-            return ord(key)
+        (key >= '0' and key <= '9'):
+            return "KEY_" + key.upper()
 
     else:
-        print("]]] WARNING: Unknown key '" + key + "'")
+        if warn:
+            print("]]] WARNING: Unknown key '" + key + "'")
+
         return 0
 
 def pushConst(num):
@@ -105,31 +109,44 @@ for line in inf:
 
     # Write string
     if cmd == "write":
-        while len(arg) > 0:
-            sub = arg[:255]
-            ads_data.append(1) # OP
-            ads_data.append(len(sub)) # Len
-            for c in sub:
-                ads_data.append(ord(c)) # Char
+        for c in arg:
+            kc = keyCode(c)
+            if kc == 0:
+                ads_data.append(5) # Alt code
+                ads_data.append("'" + c.replace('\\', '\\\\') + "'")
+            else:
+                # If uppercase
+                if c != c.lower():
+                    ads_data.append(3) # Hold
+                    ads_data.append(keyCode("shift", True))
 
-            arg = arg[255:]
+                ads_data.append(1) # Press key
+                ads_data.append(kc)
+
+                # If uppercase
+                if c != c.lower():
+                    ads_data.append(4) # Release
+                    ads_data.append(keyCode("shift", True))
 
     # Wait
     elif cmd == "wait":
         # Push command
-        ads_data.append(2) # OP
+        ads_data.append(2) # Wait
         ads_data.append(pushConst(int(arg))) # Const index
 
     # Press key
     elif cmd == "press":
         keys = arg.split('+')
-        for key in keys:
-            ads_data.append(3) # Press key OP
-            ads_data.append(keyCode(key)) # Keycode
+        for key in keys[:-1]:
+            ads_data.append(3) # Hold key
+            ads_data.append(keyCode(key, True)) # Keycode
 
-        for key in reversed(keys):
-            ads_data.append(4) # Release key OP
-            ads_data.append(keyCode(key)) # Keycode
+        ads_data.append(1) # Press key
+        ads_data.append(keyCode(keys[-1], True)) # Keycode
+
+        for key in reversed(keys[:-1]):
+            ads_data.append(4) # Release key
+            ads_data.append(keyCode(key, True)) # Keycode
 
     # Label
     elif cmd[0] == ':':
@@ -143,20 +160,10 @@ for line in inf:
     # Goto label
     elif cmd == "goto":
         # Don't put in the real jump. We're not sure the label exist yet.
-        ads_data.append(5) # Jump OP
+        ads_data.append(6) # Jump
         jumps[len(ads_data)] = arg
-        ads_data.append(0) # Dummy jump
+        ads_data.append(0) # Dummy target
 
-    # Write string raw
-    elif cmd == "writeraw":
-        while len(arg) > 0:
-            sub = arg[:255]
-            ads_data.append(6) # OP
-            ads_data.append(len(sub)) # Len
-            for c in sub:
-                ads_data.append(ord(c)) # Char
-
-            arg = arg[255:]
 
     # Unknown
     else:
@@ -185,7 +192,7 @@ for i in range(len(ads_vars)):
 
 # Create header
 outsrc =  "#include <avr/pgmspace.h>\n\n";
-outsrc += "const unsigned char ads_data[] PROGMEM = { " + ", ".join(ads_data) +  " };\n"
+outsrc += "const uint8_t ads_data[] PROGMEM = { " + ", ".join(ads_data) +  " };\n"
 outsrc += "const int ads_len = " + str(len(ads_data)) + ";\n"
 outsrc += "const int ads_consts[] = { " + ", ".join(ads_consts) + " };\n"
 outsrc += "const int ads_vars[] = { " + ", ".join(ads_vars) + " };\n"

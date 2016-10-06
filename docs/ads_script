@@ -10,5 +10,8 @@ press <key>[+key...]:
 :<label>:
     Defines a label
 
-jump <label>:
+goto <label>:
     Jumps to a label
+
+ifj <sysvar> <label>:
+    Jumps to label if sysvar is true

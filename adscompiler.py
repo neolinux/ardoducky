@@ -3,11 +3,17 @@ import sys
 # Script vars
 ads_data = []
 ads_consts = []
-ads_vars = []
 
 # Compiler vars
 labels = {}
 jumps = {}
+
+# System vars
+sysvars = {
+    "caps": 0,
+    "num": 1,
+    "scroll": 2
+}
 
 # Keycodes
 keyCodes = {
@@ -164,6 +170,26 @@ for line in inf:
         jumps[len(ads_data)] = arg
         ads_data.append(0) # Dummy target
 
+    # Jump if sysvar is true
+    elif cmd == "ifj":
+        args = arg.split(' ');
+        var = args[0]
+        lbl = args[1]
+
+        if var[0] != "$":
+            print("ERROR: '" + var + "' is not a valid variable!")
+            exit()
+
+        if not var[1:] in sysvars:
+            print("ERROR: Sysvar '" + var[1:] + "' not found!")
+            exit()
+
+        ads_data.append(7) # Jump if sysvar true
+        ads_data.append(sysvars[var[1:]])
+
+        # Don't put in the real jump. We're not sure the label exist yet.
+        jumps[len(ads_data)] = lbl
+        ads_data.append(0) # Dummy target
 
     # Unknown
     else:
@@ -187,15 +213,11 @@ for i in range(len(ads_data)):
 for i in range(len(ads_consts)):
     ads_consts[i] = str(ads_consts[i])
 
-for i in range(len(ads_vars)):
-    ads_vars[i] = str(ads_vars[i])
-
 # Create header
 outsrc =  "#include <avr/pgmspace.h>\n\n";
 outsrc += "const uint8_t ads_data[] PROGMEM = { " + ", ".join(ads_data) +  " };\n"
 outsrc += "const int ads_len = " + str(len(ads_data)) + ";\n"
 outsrc += "const int ads_consts[] = { " + ", ".join(ads_consts) + " };\n"
-outsrc += "const int ads_vars[] = { " + ", ".join(ads_vars) + " };\n"
 
 # Write file
 outf = open("script.h", "w")

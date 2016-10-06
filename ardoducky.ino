@@ -2,6 +2,8 @@
 #include "script.h"
 void runCode();
 
+char sysvars[3];
+
 void setup() {
   // Init
   BootKeyboard.begin();
@@ -11,6 +13,11 @@ void setup() {
   uint8_t leds = BootKeyboard.getLeds();
   if (leds & LED_CAPS_LOCK) BootKeyboard.write(KEY_CAPS_LOCK);
   if (!(leds & LED_NUM_LOCK)) BootKeyboard.write(KEY_NUM_LOCK);
+
+  // Set sysvars
+  sysvars[0] = leds & LED_CAPS_LOCK;
+  sysvars[1] = leds & LED_NUM_LOCK;
+  sysvars[2] = leds & LED_SCROLL_LOCK;
 
   // Run
   runCode();
@@ -90,6 +97,14 @@ void runCode() {
     else if (cmd == 6) {
       uint8_t idx = pgm_read_byte(&ads_data[++i]);
       i = ads_consts[idx] - 1;
+    }
+
+    // Jump if sysvar is true
+    else if (cmd == 7) {
+      uint8_t sysvar_idx = pgm_read_byte(&ads_data[++i]);
+      uint8_t data_idx = pgm_read_byte(&ads_data[++i]);
+      if (sysvars[sysvar_idx])
+        i = ads_consts[data_idx] - 1;
     }
   }
 }

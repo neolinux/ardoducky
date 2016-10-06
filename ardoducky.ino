@@ -4,8 +4,13 @@ void runCode();
 
 void setup() {
   // Init
-  Keyboard.begin();
+  BootKeyboard.begin();
   delay(1000);
+
+  // Reset caps lock and num lock
+  uint8_t leds = BootKeyboard.getLeds();
+  if (leds & LED_CAPS_LOCK) BootKeyboard.write(KEY_CAPS_LOCK);
+  if (!(leds & LED_NUM_LOCK)) BootKeyboard.write(KEY_NUM_LOCK);
 
   // Run
   runCode();
@@ -24,25 +29,25 @@ void altCode(uint8_t n) {
   uint8_t c = n % 10;
 
   // Press alt
-  Keyboard.press(KEY_LEFT_ALT);
+  BootKeyboard.press(KEY_LEFT_ALT);
   delay(1);
 
   // Type alt code
   if (a) {
-    Keyboard.write((KeyboardKeycode)(KEYPAD_1 + (a + 9) % 10));
+    BootKeyboard.write((KeyboardKeycode)(KEYPAD_1 + (a + 9) % 10));
     delay(1);
   }
 
   if (a || b) {
-    Keyboard.write((KeyboardKeycode)(KEYPAD_1 + (b + 9) % 10));
+    BootKeyboard.write((KeyboardKeycode)(KEYPAD_1 + (b + 9) % 10));
     delay(1);
   }
 
-  Keyboard.write((KeyboardKeycode)(KEYPAD_1 + (c + 9) % 10));
+  BootKeyboard.write((KeyboardKeycode)(KEYPAD_1 + (c + 9) % 10));
   delay(1);
 
   // Release alt
-  Keyboard.release(KEY_LEFT_ALT);
+  BootKeyboard.release(KEY_LEFT_ALT);
   delay(1);
 }
 
@@ -53,7 +58,7 @@ void runCode() {
 
     // Press key
     if (cmd == 1) {
-      Keyboard.write((KeyboardKeycode)pgm_read_byte(&ads_data[++i]));
+      BootKeyboard.write((KeyboardKeycode)pgm_read_byte(&ads_data[++i]));
       delay(1);
     }
 
@@ -65,13 +70,13 @@ void runCode() {
 
     // Press
     else if (cmd == 3) {
-      Keyboard.press((KeyboardKeycode)pgm_read_byte(&ads_data[++i]));
+      BootKeyboard.press((KeyboardKeycode)pgm_read_byte(&ads_data[++i]));
       delay(1);
     }
 
     // Release
     else if (cmd == 4) {
-      Keyboard.release((KeyboardKeycode)pgm_read_byte(&ads_data[++i]));
+      BootKeyboard.release((KeyboardKeycode)pgm_read_byte(&ads_data[++i]));
       delay(1);
     }
 

@@ -60,7 +60,7 @@ if len(sys.argv) != 2:
     print("Usage: adscompiler.py <script>")
     exit()
 
-# Open duckyscript
+# Open ardoducky script
 inf = open(sys.argv[1], "r")
 
 # Script vars

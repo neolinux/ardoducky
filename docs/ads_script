@@ -1,0 +1,8 @@
+write <str>:
+    Writes an ASCII string
+
+wait <time>:
+    Waits <time> milliseconds
+
+press <key>[+key...]:
+    Presses and releases a keycombination

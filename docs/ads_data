@@ -1,0 +1,11 @@
+Write string:
+1, len, [bytes]
+
+Delay:
+2, const
+
+Hold key:
+3, key
+
+Release key:
+4, key
